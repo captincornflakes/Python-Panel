@@ -1,0 +1,13 @@
+# Deny all direct web access to the data directory
+
+# Apache 2.2
+Order Allow,Deny
+Deny from all
+
+# Apache 2.4+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+
+# Disable directory listing as an extra safety net
+Options -Indexes

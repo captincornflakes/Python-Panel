@@ -1,0 +1,5 @@
+# Cron entry to refresh bot project statuses every minute
+# Copy this file into /etc/cron.d/ (e.g. /etc/cron.d/botpanel-status)
+# and adjust the PHP path, project path, or user if needed.
+
+* * * * * www-data /usr/bin/php /var/www/html/assets/php/cron_status.php >/dev/null 2>&1
