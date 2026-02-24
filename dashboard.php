@@ -104,9 +104,25 @@ $username = $_SESSION['user'] ?? 'unknown';
                 <input type="text" class="form-control" id="edit-project-start" name="start" placeholder="main.py" required>
               </div>
               <div class="mb-3">
+                <label class="form-label">Source type</label>
+                <div class="btn-group" role="group" aria-label="Project source type">
+                  <input type="radio" class="btn-check" name="edit-project-mode" id="edit-project-mode-zip" value="project" autocomplete="off">
+                  <label class="btn btn-sm btn-outline-secondary" for="edit-project-mode-zip">Upload ZIP</label>
+
+                  <input type="radio" class="btn-check" name="edit-project-mode" id="edit-project-mode-git" value="git" autocomplete="off">
+                  <label class="btn btn-sm btn-outline-secondary" for="edit-project-mode-git">Git repository</label>
+                </div>
+                <div class="form-text text-secondary">Choose whether this project uses an uploaded ZIP or a Git repository as its source.</div>
+              </div>
+              <div class="mb-3" id="edit-project-zip-group">
                 <label for="edit-project-archive" class="form-label">Upload project zip</label>
                 <input type="file" class="form-control" id="edit-project-archive" name="archive" accept=".zip">
                 <div class="form-text text-secondary">Optional: upload a .zip containing the project files to extract into this project's folder.</div>
+              </div>
+              <div class="mb-3 d-none" id="edit-project-git-group">
+                <label for="edit-project-git-url" class="form-label">Git repository URL</label>
+                <input type="url" class="form-control" id="edit-project-git-url" name="git_url" placeholder="https://github.com/you/repo.git">
+                <div class="form-text text-secondary">On save, the panel will clone or pull this repository into the project folder.</div>
               </div>
               <div class="text-end">
                 <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>

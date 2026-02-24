@@ -125,11 +125,14 @@ function resolve_project_dir_or_exit(string $username, string $projectId): strin
     }
 
     $projectDir = $userDir . '/' . $projectId;
-    if (!is_dir($projectDir)) {
-        http_response_code(404);
+    // Ensure the per-project directory exists so file operations and uploads
+    // can succeed even for older projects or ones created before directories
+    // were provisioned.
+    if (!is_dir($projectDir) && !mkdir($projectDir, 0770, true) && !is_dir($projectDir)) {
+        http_response_code(500);
         echo json_encode([
             'success' => false,
-            'error'   => 'Project directory not found.',
+            'error'   => 'Failed to access project directory.',
         ]);
         exit;
     }

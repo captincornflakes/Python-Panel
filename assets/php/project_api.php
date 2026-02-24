@@ -64,7 +64,6 @@ $allowed_actions = [
     'status',
     'start',
     'stop',
-    'enter',
     'pull',
 ];
 
@@ -360,11 +359,59 @@ switch ($action) {
         $response['project_id']=$id;
         $response['screen']=$sessionName;
         break;
-    case 'enter':
-        // TODO: implement enter session
-        break;
     case 'pull':
-        // TODO: implement pull project/logs
+        if($username===null||$username===''){http_response_code(500);$response['error']='No username found in session.';break;}
+        $id=trim($_REQUEST['id']??'');
+        if($id===''){http_response_code(400);$response['error']='Missing project id.';break;}
+
+        $projectsDir=__DIR__.'/../../data/projects';
+        $safeName=preg_replace('/[^a-zA-Z0-9_-]/','_',$username);
+        $filePath=$projectsDir.'/'.$safeName.'.json';
+        if(!file_exists($filePath)){http_response_code(404);$response['error']='Project file not found.';break;}
+
+        $raw=file_get_contents($filePath);$data=json_decode($raw,true);
+        if(!is_array($data)||!isset($data['projects'])||!is_array($data['projects'])){http_response_code(500);$response['error']='Corrupt project file.';break;}
+
+        $project=null;$index=null;
+        foreach($data['projects'] as $i=>$p){if(isset($p['id'])&&$p['id']===$id){$project=$p;$index=$i;break;}}
+        if($project===null){http_response_code(404);$response['error']='Project not found.';break;}
+
+        $mode=$project['mode']??'project';
+        if($mode!=='git'){http_response_code(400);$response['error']='Project is not configured for git mode.';break;}
+
+        $repoUrl=trim($project['project']??'');
+        if($repoUrl===''){http_response_code(400);$response['error']='Git repository URL is not set for this project.';break;}
+
+        $userDir=$projectsDir.'/'.$safeName;
+        if(!is_dir($userDir)&&!mkdir($userDir,0770,true)&&!is_dir($userDir)){http_response_code(500);$response['error']='Failed to create user project directory.';break;}
+
+        $projDir=$userDir.'/'.$id;
+        if(!is_dir($projDir)&&!mkdir($projDir,0770,true)&&!is_dir($projDir)){http_response_code(500);$response['error']='Failed to create project directory.';break;}
+
+        $gitDir=$projDir.'/.git';
+        if(!is_dir($gitDir)){
+            // Use git from PATH rather than a hardcoded binary path for portability
+            $cmd='cd '.escapeshellarg($projDir).' && git clone --depth 1 '.escapeshellarg($repoUrl).' .';
+        }else{
+            $cmd='cd '.escapeshellarg($projDir).' && git pull --rebase';
+        }
+
+        $output=[];$ret=null;
+        @exec($cmd.' 2>&1',$output,$ret);
+        if($ret!==0){
+            http_response_code(500);
+            $response['error']='Git operation failed.';
+            $response['git_output']=$output;
+            break;
+        }
+
+        $data['projects'][$index]['last_git_pull_at']=date('c');
+        file_put_contents($filePath,json_encode($data,JSON_PRETTY_PRINT));
+
+        $response['success']=true;
+        $response['message']='Git repository synchronized.';
+        $response['project_id']=$id;
+        $response['git_output']=$output;
         break;
 }
 

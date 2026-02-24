@@ -157,6 +157,34 @@
         form.querySelector('#edit-project-start').value = project.start_file || '';
         const fileInput = form.querySelector('#edit-project-archive');
         if (fileInput) fileInput.value = '';
+
+        // Set source type (ZIP vs Git) and related fields
+        const mode = (project.mode || 'project').toLowerCase() === 'git' ? 'git' : 'project';
+        const modeZip = form.querySelector('#edit-project-mode-zip');
+        const modeGit = form.querySelector('#edit-project-mode-git');
+        const zipGroup = document.getElementById('edit-project-zip-group');
+        const gitGroup = document.getElementById('edit-project-git-group');
+        const gitInput = form.querySelector('#edit-project-git-url');
+        if (modeZip && modeGit) {
+          if (mode === 'git') {
+            modeGit.checked = true;
+          } else {
+            modeZip.checked = true;
+          }
+        }
+        if (gitInput) {
+          gitInput.value = project.project || '';
+        }
+        if (zipGroup && gitGroup) {
+          if (mode === 'git') {
+            zipGroup.classList.add('d-none');
+            gitGroup.classList.remove('d-none');
+          } else {
+            zipGroup.classList.remove('d-none');
+            gitGroup.classList.add('d-none');
+          }
+        }
+
         if (window.bootstrap) {
           const instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
           instance.show();
@@ -279,6 +307,10 @@
       const id = form.querySelector('#edit-project-id').value.trim();
       const name = form.querySelector('#edit-project-name').value.trim();
       const start = form.querySelector('#edit-project-start').value.trim();
+      const modeInput = form.querySelector('input[name="edit-project-mode"]:checked');
+      const mode = modeInput ? modeInput.value : 'project';
+      const gitInput = form.querySelector('#edit-project-git-url');
+      const gitUrl = gitInput ? gitInput.value.trim() : '';
       const fileInput = form.querySelector('#edit-project-archive');
       const file = fileInput && fileInput.files ? fileInput.files[0] : null;
       if (!id) return;
@@ -287,9 +319,19 @@
       fdUpdate.append('id', id);
       if (name) fdUpdate.append('name', name);
       if (start) fdUpdate.append('start', start);
+      if (mode === 'git') {
+        fdUpdate.append('mode', 'git');
+        if (gitUrl) {
+          fdUpdate.append('project', gitUrl);
+        }
+      } else {
+        fdUpdate.append('mode', 'project');
+        // Clear any previous git URL when switching back to ZIP mode
+        fdUpdate.append('project', '');
+      }
 
       const doUpload = () => {
-        if (!file) return Promise.resolve();
+        if (!file || mode === 'git') return Promise.resolve();
         const fdUpload = new FormData();
         fdUpload.append('id', id);
         fdUpload.append('archive', file);
@@ -322,9 +364,69 @@
           form.reset();
           loadProjects();
           if (window.showFeedback) window.showFeedback('Project updated.', 'success');
+
+          // If Git mode is selected, trigger a background pull to sync code
+          if (mode === 'git') {
+            const fdPull = new FormData();
+            fdPull.append('id', id);
+            fetch('assets/php/project_api.php?action=pull', {
+              method: 'POST',
+              credentials: 'same-origin',
+              body: fdPull
+            })
+              .then(r => r.ok ? r.json() : null)
+              .then(data => {
+                if (!data || data.success === false) {
+                  if (window.showFeedback) window.showFeedback('Git sync may have failed. Check repository settings.', 'warning');
+                }
+              })
+              .catch(() => {});
+          }
         })
         .catch(console.error);
     });
+  }
+
+  function bindEditModeToggle() {
+    const form = document.getElementById('edit-project-form');
+    if (!form) return;
+    const modeZip = form.querySelector('#edit-project-mode-zip');
+    const modeGit = form.querySelector('#edit-project-mode-git');
+    const zipGroup = document.getElementById('edit-project-zip-group');
+    const gitGroup = document.getElementById('edit-project-git-group');
+    const gitInput = form.querySelector('#edit-project-git-url');
+    if (!modeZip || !modeGit || !zipGroup || !gitGroup) return;
+
+    const updateVisibility = () => {
+      const mode = (form.querySelector('input[name="edit-project-mode"]:checked') || {}).value || 'project';
+      if (mode === 'git') {
+        zipGroup.classList.add('d-none');
+        gitGroup.classList.remove('d-none');
+      } else {
+        zipGroup.classList.remove('d-none');
+        gitGroup.classList.add('d-none');
+      }
+    };
+
+    modeZip.addEventListener('change', updateVisibility);
+    modeGit.addEventListener('change', updateVisibility);
+
+    // If the user starts typing a Git URL, automatically switch to Git mode
+    if (gitInput) {
+      gitInput.addEventListener('input', () => {
+        const val = gitInput.value.trim();
+        if (val && !modeGit.checked) {
+          modeGit.checked = true;
+          updateVisibility();
+        }
+      });
+    }
+
+    // Initialize default state
+    if (!modeZip.checked && !modeGit.checked) {
+      modeZip.checked = true;
+    }
+    updateVisibility();
   }
 
   function init() {
@@ -332,6 +434,7 @@
     bindNewProjectForm();
     bindTableActions();
     bindEditProjectForm();
+    bindEditModeToggle();
     // Periodically refresh just the status from the API once per minute
     setInterval(() => {
       if (!projectsCache || !projectsCache.length) return;
