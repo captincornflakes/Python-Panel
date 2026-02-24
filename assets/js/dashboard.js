@@ -15,12 +15,25 @@
     return '<span class="badge ' + cls + '">' + (status || 'unknown') + '</span>';
   }
 
+  function formatTimestamp(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    const pad = n => (n < 10 ? '0' + n : '' + n);
+    const dd = pad(d.getDate());
+    const mm = pad(d.getMonth() + 1);
+    const yy = ('' + d.getFullYear()).slice(-2);
+    const hh = pad(d.getHours());
+    const min = pad(d.getMinutes());
+    return dd + '/' + mm + '/' + yy + ' ' + hh + ':' + min;
+  }
+
   function render(list) {
     body.innerHTML = '';
     if (!list || !list.length) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
-      td.colSpan = 6;
+      td.colSpan = 7;
       td.className = 'text-center text-secondary';
       td.textContent = 'No projects yet.';
       tr.appendChild(td);
@@ -35,19 +48,28 @@
       const startDisabled = status === 'running';
       const stopDisabled = status === 'offline';
       const runDisabled = status === 'running';
+      const timestamps = (function () {
+        const parts = [];
+        if (p.created_at) parts.push('Created: ' + formatTimestamp(p.created_at));
+        if (p.updated_at) parts.push('Updated: ' + formatTimestamp(p.updated_at));
+        if (p.last_started_at) parts.push('Started: ' + formatTimestamp(p.last_started_at));
+        if (p.last_stopped_at) parts.push('Stopped: ' + formatTimestamp(p.last_stopped_at));
+        return parts.length ? parts.join('<br>') : '';
+      })();
       tr.innerHTML =
         '<td>' + (p.name || '') + '</td>' +
         '<td>' + (p.mode || '') + '</td>' +
-        '<td>' + (screenName ? '<button class="btn btn-sm btn-outline-info js-view-screen" type="button">View</button>' : '') + '</td>' +
         '<td>' + (p.start_file || '') + '</td>' +
+        '<td class="small text-secondary">' + (timestamps || '&mdash;') + '</td>' +
         '<td>' + badge(p.status) + '</td>' +
+        '<td>' + (screenName ? '<button class="btn btn-sm btn-outline-info js-view-screen" type="button" title="Open live screen log">View</button>' : '') + '</td>' +
         '<td class="text-end">' +
-          '<button class="btn btn-sm btn-success me-1 js-start-project" type="button"' + (startDisabled ? ' disabled' : '') + '><i class="bi bi-play-fill"></i></button>' +
-          '<button class="btn btn-sm btn-warning me-1 js-stop-project" type="button"' + (stopDisabled ? ' disabled' : '') + '><i class="bi bi-stop-fill"></i></button>' +
-          '<button class="btn btn-sm btn-outline-info me-1 js-status-project" type="button"><i class="bi bi-arrow-repeat"></i></button>' +
-          '<button class="btn btn-sm btn-outline-secondary me-1 js-project-files" type="button"><i class="bi bi-folder2-open"></i></button>' +
-          '<button class="btn btn-sm btn-outline-light me-1 js-edit-project" type="button"' + (runDisabled ? ' disabled' : '') + '><i class="bi bi-pencil-square"></i></button>' +
-          '<button class="btn btn-sm btn-outline-danger js-delete-project" type="button"' + (runDisabled ? ' disabled' : '') + '><i class="bi bi-trash"></i></button>' +
+          '<button class="btn btn-sm btn-success me-1 js-start-project" type="button" title="Start bot"' + (startDisabled ? ' disabled' : '') + '><i class="bi bi-play-fill"></i></button>' +
+          '<button class="btn btn-sm btn-warning me-1 js-stop-project" type="button" title="Stop bot"' + (stopDisabled ? ' disabled' : '') + '><i class="bi bi-stop-fill"></i></button>' +
+          '<button class="btn btn-sm btn-outline-info me-1 js-status-project" type="button" title="Refresh status"><i class="bi bi-arrow-repeat"></i></button>' +
+          '<button class="btn btn-sm btn-outline-secondary me-1 js-project-files" type="button" title="Open file manager"><i class="bi bi-folder2-open"></i></button>' +
+          '<button class="btn btn-sm btn-outline-light me-1 js-edit-project" type="button" title="Edit project"' + (runDisabled ? ' disabled' : '') + '><i class="bi bi-pencil-square"></i></button>' +
+          '<button class="btn btn-sm btn-outline-danger js-delete-project" type="button" title="Delete project"' + (runDisabled ? ' disabled' : '') + '><i class="bi bi-trash"></i></button>' +
         '</td>';
       tr.dataset.projectId = p.id || '';
       tr.dataset.projectName = p.name || '';
@@ -67,7 +89,8 @@
     const tr = body.querySelector('tr[data-project-id="' + id + '"]');
     if (!tr) return;
     const cells = tr.querySelectorAll('td');
-    if (cells.length >= 5) {
+    if (cells.length >= 6) {
+      // With columns [Name, Mode, Start, Timestamps, Status, Screen, Actions]
       cells[4].innerHTML = badge(status);
     }
     // Enable/disable start/stop/edit/delete buttons based on status
@@ -82,10 +105,10 @@
     if (editBtn) editBtn.disabled = running;
     if (deleteBtn) deleteBtn.disabled = running;
     // Optionally update the screen column and dataset as well if provided
-    if (typeof screen !== 'undefined' && cells.length >= 3) {
+    if (typeof screen !== 'undefined' && cells.length >= 6) {
       const newScreen = screen || '';
       tr.dataset.screenName = newScreen;
-      cells[2].innerHTML = newScreen ? '<button class="btn btn-sm btn-outline-info js-view-screen" type="button">View</button>' : '';
+      cells[5].innerHTML = newScreen ? '<button class="btn btn-sm btn-outline-info js-view-screen" type="button" title="Open live screen log">View</button>' : '';
     }
   }
 

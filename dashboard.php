@@ -43,9 +43,10 @@ $username = $_SESSION['user'] ?? 'unknown';
                     <tr>
                       <th scope="col">Name</th>
                       <th scope="col">Mode</th>
-                      <th scope="col">Screen</th>
                       <th scope="col">Start File</th>
+                      <th scope="col">Timestamps</th>
                       <th scope="col">Status</th>
+                      <th scope="col">Screen</th>
                       <th scope="col" class="text-end">Actions</th>
                     </tr>
                   </thead>
