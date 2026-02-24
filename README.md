@@ -54,3 +54,18 @@ From the dashboard:
 - Use the Screen column **View** action to open a live log viewer for `screen.log` in a full-height modal.
 - Manage your account from the user menu (change password or delete account).
 
+## Using GitHub / Git Repos
+
+Projects can also be backed by a Git repository (for example a public GitHub repo):
+
+- Install git on the server: `apt install -y git` and restart Apache.
+- In the dashboard, open **Edit** on a project.
+- Switch **Source type** to **Git repository**.
+- Enter the HTTPS clone URL (for example `https://github.com/your-user/your-repo.git`).
+- Save changes; the panel will clone or pull the repo into that project's folder and keep using it on subsequent pulls.
+
+Notes:
+
+- Repos that require authentication must be accessible to the user account running Apache (for example via SSH keys and `git@github.com:...` URLs already configured on the box).
+- The file manager hides dot folders like `.git` and `.venv` but all checked-out files are available to view and edit.
+
