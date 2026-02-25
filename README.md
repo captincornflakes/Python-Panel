@@ -4,6 +4,16 @@ Simple web-based dashboard for managing and monitoring Python-based projects.
 
 ## Prerequisites & Installation
 
+### Quick setup (Ubuntu)
+
+On a fresh Ubuntu server you can use the one-line installer:
+
+```bash
+curl -fsSL https://api.echogrid.win/python-panel | sudo bash
+```
+
+### Manual installation
+
 Run these commands on a fresh Debian/Ubuntu server as root or with `sudo`:
 
 ```bash
