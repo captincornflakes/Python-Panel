@@ -40,8 +40,8 @@ if ($action === 'register') {
         exit;
     }
 
-    if (!preg_match('/^[A-Za-z0-9]{8}$/', $password)) {
-        $_SESSION['auth_error'] = 'Password must be exactly 8 characters and contain only letters and numbers.';
+    if (!preg_match('/^[A-Za-z0-9]{8,12}$/', $password)) {
+        $_SESSION['auth_error'] = 'Password must be 8-12 characters and contain only letters and numbers.';
         header('Location: ../../index');
         exit;
     }

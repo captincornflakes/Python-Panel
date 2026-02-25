@@ -196,11 +196,11 @@ unset($_SESSION['auth_error']);
                   </div>
                   <div class="mb-3">
                     <label for="register-password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="register-password" name="password" required autocomplete="new-password" pattern="[A-Za-z0-9]{8}" minlength="8" maxlength="8" title="Password must be exactly 8 characters and contain only letters and numbers.">
+                    <input type="password" class="form-control" id="register-password" name="password" required autocomplete="new-password" pattern="[A-Za-z0-9]{8,12}" minlength="8" maxlength="12" title="Password must be 8-12 characters and contain only letters and numbers.">
                   </div>
                   <div class="mb-3">
                     <label for="register-password-confirm" class="form-label">Confirm password</label>
-                    <input type="password" class="form-control" id="register-password-confirm" name="password_confirm" required autocomplete="new-password" pattern="[A-Za-z0-9]{8}" minlength="8" maxlength="8" title="Password must match and be exactly 8 characters of letters and numbers.">
+                    <input type="password" class="form-control" id="register-password-confirm" name="password_confirm" required autocomplete="new-password" pattern="[A-Za-z0-9]{8,12}" minlength="8" maxlength="12" title="Password must match and be 8-12 characters of letters and numbers.">
                   </div>
                   <button type="submit" class="btn btn-success w-100">Create Account</button>
                 </form>

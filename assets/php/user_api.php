@@ -93,10 +93,10 @@ switch ($action) {
             break;
         }
 
-        // Validation for the new password: exactly 8 alphanumeric characters
-        if (!preg_match('/^[A-Za-z0-9]{8}$/', $newPassword)) {
+        // Validation for the new password: 8-12 alphanumeric characters
+        if (!preg_match('/^[A-Za-z0-9]{8,12}$/', $newPassword)) {
             http_response_code(400);
-            $response['error'] = 'New password must be exactly 8 characters and contain only letters and numbers.';
+            $response['error'] = 'New password must be 8-12 characters and contain only letters and numbers.';
             break;
         }
 
